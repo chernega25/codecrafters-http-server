@@ -7,6 +7,25 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <vector>
+#include <sstream>
+
+std::vector<std::string> split_message(const std::string &message, const std::string& delim) {
+  std::vector<std::string> toks;
+  std::stringstream ss = std::stringstream{message};
+  std::string line;
+  while (getline(ss, line, *delim.begin())) {
+    toks.push_back(line);
+    ss.ignore(delim.length() - 1);
+  }
+  return toks;
+}
+
+std::string get_path(std::string request) {
+  std::vector<std::string> toks = split_message(request, "\r\n");
+  std::vector<std::string> path_toks = split_message(toks[0], " ");
+  return path_toks[1];
+}
 
 int main(int argc, char **argv) {
   // Flush after every std::cout / std::cerr
@@ -66,25 +85,28 @@ int main(int argc, char **argv) {
   
   if (brecvd < 0)
   {
-    std::cerr << "error receiving message from client\n";
+    std::cerr << "Error receiving message from client\n";
     close(client_fd);
     close(server_fd);
     return 1;
   }
 
-  std::string response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ";
-
-  auto pos = request.find('\r'); //GET /echo/abc HTTP/1.1\r\nHost: localhost:4221\r\nUser-Agent: curl/7.64.1\r\nAccept: */*\r\n\r\n
-  auto echo  = request.substr(10, pos - 19);
-  std::cout << echo << std::endl;
-
-  response += std::to_string(echo.length()) + "\r\n\r\n" + echo;
+  auto path = get_path(request);
+  auto split_path = split_message(path, "/");
+  std::string response;
+  if (path == "/") {
+    response = "HTTP/1.1 200 OK\r\n\r\n";
+  } else if (split_path[1] == "echo") {
+    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(split_path[2].length()) + "\r\n\r\n" + split_path[2];
+  } else {
+    response = "HTTP/1.1 404 Not Found\r\n\r\n";
+  }
 
   ssize_t bsent = send(client_fd, response.c_str(), response.length(), 0);
   
   if (bsent < 0)
   {
-    std::cerr << "error sending response to client\n";
+    std::cerr << "Error sending response to client\n";
     close(client_fd);
     close(server_fd);
     return 1;
