@@ -12,9 +12,6 @@ int main(int argc, char **argv) {
   // Flush after every std::cout / std::cerr
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
-  
-  // You can use print statements as follows for debugging, they'll be visible when running tests.
-  std::cout << "Logs from your program will appear here!\n";
 
   // Uncomment this block to pass the first stage
   //
@@ -53,8 +50,14 @@ int main(int argc, char **argv) {
   
   std::cout << "Waiting for a client to connect...\n";
   
-  accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
+  int client_socket = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
+
+  const char* reply = "HTTP/1.1 200 OK\r\n\r\n";
+  send(client_socket, reply, strlen(reply), 0);
+
   std::cout << "Client connected\n";
+
+
   
   close(server_fd);
 
