@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  std::string response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 3\r\n\r\n";
+  std::string response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ";
 
   auto pos = request.find('\r'); //GET /echo/abc HTTP/1.1\r\nHost: localhost:4221\r\nUser-Agent: curl/7.64.1\r\nAccept: */*\r\n\r\n
   auto echo  = request.substr(10, pos - 19);
