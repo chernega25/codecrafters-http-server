@@ -50,14 +50,45 @@ int main(int argc, char **argv) {
   
   std::cout << "Waiting for a client to connect...\n";
   
-  int client = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
+  int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
+
+  if (client_fd < 0)
+  {
+    std::cerr << "error handling client connection\n";
+    close(server_fd);
+    return 1;
+  }
 
   std::cout << "Client connected\n";
-  
-  std::string reply = "HTTP/1.1 200 OK\r\n\r\n";
-  send(client, reply.c_str(), reply.length(), 0);
-  
-  close(server_fd);
 
+  std::string request(1024, '\0');
+  ssize_t brecvd = recv(client_fd, (void *)&request[0], request.max_size(), 0);
+  
+  if (brecvd < 0)
+  {
+    std::cerr << "error receiving message from client\n";
+    close(client_fd);
+    close(server_fd);
+    return 1;
+  }
+
+  std::string response;
+  if (request[5] == ' ') //"GET / HTTP/1.1\r\n"
+    response = "HTTP/1.1 200 OK\r\n\r\n";
+  else
+    response = "HTTP/1.1 404 Not Found\r\n\r\n";
+
+  ssize_t bsent = send(client_fd, response.c_str(), response.length(), 0);
+  
+  if (bsent < 0)
+  {
+    std::cerr << "error sending response to client\n";
+    close(client_fd);
+    close(server_fd);
+    return 1;
+  }
+
+  close(client_fd);
+  close(server_fd);
   return 0;
 }
