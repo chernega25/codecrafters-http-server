@@ -9,6 +9,7 @@
 #include <netdb.h>
 #include <vector>
 #include <sstream>
+#include <unordered_map>
 
 std::vector<std::string> split_message(const std::string &message, const std::string& delim) {
   std::vector<std::string> toks;
@@ -21,11 +22,26 @@ std::vector<std::string> split_message(const std::string &message, const std::st
   return toks;
 }
 
-std::string get_path(std::string request) {
-  std::vector<std::string> toks = split_message(request, "\r\n");
-  std::vector<std::string> path_toks = split_message(toks[0], " ");
-  return path_toks[1];
-}
+struct http_request{
+  std::string path;
+  std::unordered_map<std::string, std::string> headers;
+  std::string body;
+
+  http_request(std::string request) {
+    auto toks = split_message(request, "\r\n");
+    auto path_toks = split_message(toks[0], " ");
+    path = path_toks[1];
+
+    size_t i = 1;
+    while (toks[i] != "") {
+      auto split = split_message(toks[i], ": ");
+      headers[split[0]] = split[1];
+      ++i;
+    }
+
+    body = toks[i + 1];
+  }
+};
 
 int main(int argc, char **argv) {
   // Flush after every std::cout / std::cerr
@@ -80,8 +96,8 @@ int main(int argc, char **argv) {
 
   std::cout << "Client connected\n";
 
-  std::string request(1024, '\0');
-  ssize_t brecvd = recv(client_fd, (void *)&request[0], request.max_size(), 0);
+  std::string buffer(1024, '\0');
+  ssize_t brecvd = recv(client_fd, (void *)&buffer[0], buffer.max_size(), 0);
   
   if (brecvd < 0)
   {
@@ -91,13 +107,16 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  auto path = get_path(request);
-  auto split_path = split_message(path, "/");
+  http_request request(buffer);
+  auto split_path = split_message(request.path, "/");
   std::string response;
-  if (path == "/") {
+  if (request.path == "/") {
     response = "HTTP/1.1 200 OK\r\n\r\n";
   } else if (split_path[1] == "echo") {
     response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(split_path[2].length()) + "\r\n\r\n" + split_path[2];
+  } else if (split_path[1] == "user-agent") {
+    auto user_agent = request.headers["User-Agent"];
+    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(user_agent.length()) + "\r\n\r\n" + user_agent;
   } else {
     response = "HTTP/1.1 404 Not Found\r\n\r\n";
   }
