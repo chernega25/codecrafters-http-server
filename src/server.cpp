@@ -72,11 +72,13 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  std::string response;
-  if (request[5] == ' ') //"GET / HTTP/1.1\r\n"
-    response = "HTTP/1.1 200 OK\r\n\r\n";
-  else
-    response = "HTTP/1.1 404 Not Found\r\n\r\n";
+  std::string response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 3\r\n\r\n";
+
+  auto pos = request.find('\r'); //GET /echo/abc HTTP/1.1\r\nHost: localhost:4221\r\nUser-Agent: curl/7.64.1\r\nAccept: */*\r\n\r\n
+  auto echo  = request.substr(10, pos - 19);
+  std::cout << echo << std::endl;
+
+  response += std::to_string(echo.length()) + "\r\n\r\n" + echo;
 
   ssize_t bsent = send(client_fd, response.c_str(), response.length(), 0);
   
