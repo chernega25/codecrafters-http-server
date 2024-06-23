@@ -50,14 +50,12 @@ int main(int argc, char **argv) {
   
   std::cout << "Waiting for a client to connect...\n";
   
-  int client_socket = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
-
-  const char* reply = "HTTP/1.1 200 OK\r\n\r\n";
-  send(client_socket, reply, strlen(reply), 0);
+  int client = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
 
   std::cout << "Client connected\n";
-
-
+  
+  std::string reply = "HTTP/1.1 200 OK\r\n\r\n";
+  send(client, reply.c_str(), reply.length(), 0);
   
   close(server_fd);
 
