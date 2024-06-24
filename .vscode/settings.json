@@ -1,5 +1,100 @@
 {
+    // Path to your CMake executable, adjust if necessary
+    "cmake.cmakePath": "/usr/local/bin/cmake",
+
+    // Automatically configure the project when opened
+    "cmake.configureOnOpen": true,
+
+    // Specify the CMake generator you prefer, e.g., Ninja or Unix Makefiles
+    "cmake.generator": "Unix Makefiles",
+
+    // Define the build directory for CMake
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+
+    // Use CMake Tools extension to provide IntelliSense configuration
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+
+    // Specify the C++ compiler explicitly
+    "cmake.configureArgs": [
+        "-DCMAKE_CXX_COMPILER=clang++"
+    ],
+
+    // Define the environment variable to use C++23 standard
+    "cmake.environment": {
+        "CXXFLAGS": "-std=c++23"
+    },
+
+    // Additional compiler flags for CMake to use C++23 standard
+    "cmake.buildArgs": [
+        "-DCMAKE_CXX_STANDARD=23"
+    ],
+
+    // Optionally, adjust logging level for more details during configuration
+    "cmake.loggingLevel": "debug",
+    "editor.tabSize": 4,
+
     "files.associations": {
-        "iosfwd": "cpp"
+        "iosfwd": "cpp",
+        "__bit_reference": "cpp",
+        "__bits": "cpp",
+        "__config": "cpp",
+        "__debug": "cpp",
+        "__errc": "cpp",
+        "__hash_table": "cpp",
+        "__locale": "cpp",
+        "__mutex_base": "cpp",
+        "__node_handle": "cpp",
+        "__split_buffer": "cpp",
+        "__threading_support": "cpp",
+        "__tuple": "cpp",
+        "__verbose_abort": "cpp",
+        "array": "cpp",
+        "atomic": "cpp",
+        "bit": "cpp",
+        "bitset": "cpp",
+        "cctype": "cpp",
+        "clocale": "cpp",
+        "cmath": "cpp",
+        "complex": "cpp",
+        "cstdarg": "cpp",
+        "cstddef": "cpp",
+        "cstdint": "cpp",
+        "cstdio": "cpp",
+        "cstdlib": "cpp",
+        "cstring": "cpp",
+        "ctime": "cpp",
+        "cwchar": "cpp",
+        "cwctype": "cpp",
+        "exception": "cpp",
+        "initializer_list": "cpp",
+        "ios": "cpp",
+        "iostream": "cpp",
+        "istream": "cpp",
+        "limits": "cpp",
+        "locale": "cpp",
+        "memory": "cpp",
+        "mutex": "cpp",
+        "new": "cpp",
+        "optional": "cpp",
+        "ostream": "cpp",
+        "ratio": "cpp",
+        "sstream": "cpp",
+        "stdexcept": "cpp",
+        "streambuf": "cpp",
+        "string": "cpp",
+        "string_view": "cpp",
+        "system_error": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "typeinfo": "cpp",
+        "unordered_map": "cpp",
+        "variant": "cpp",
+        "vector": "cpp",
+        "__nullptr": "cpp",
+        "__string": "cpp",
+        "chrono": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "algorithm": "cpp"
     }
 }

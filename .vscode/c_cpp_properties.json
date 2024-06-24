@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Clang",
+            "includePath": [
+                "${workspaceFolder}/**"  // Adjust as needed for your include paths
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang++",  // Update to the path of your Clang++ compiler
+            "cStandard": "c11",
+            "cppStandard": "c++23",  // Specify the C++ standard you want to use
+            "intelliSenseMode": "clang-x64",  // Use Clang mode for IntelliSense
+            "compilerArgs": [
+                "-std=c++23"  // Ensure Clang uses C++23 standard for IntelliSense
+            ]
+        }
+    ],
+    "version": 4
+}

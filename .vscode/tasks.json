@@ -1,0 +1,23 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "cmake --build ${workspaceFolder}/build",  // Command to build using CMake
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"],  // Use $gcc problem matcher for Clang/Clang++ compatibility
+            "detail": "Building the project using CMake"
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "cmake --build ${workspaceFolder}/build --target clean",  // Clean target using CMake
+            "group": "build",
+            "detail": "Cleaning the project"
+        }
+    ]
+}
