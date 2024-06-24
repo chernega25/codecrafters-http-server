@@ -31,8 +31,8 @@ int main(int argc, char **argv) {
 	int connections = MAX_CONNECTIONS;
 
 	// std::vector<std::thread> threads;
-	while(connections--) {
-		if (server.accept_client()) return 1;
+	while(true) {
+		server.accept_client();
 	}
 
 	return 0;

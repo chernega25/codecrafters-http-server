@@ -11,7 +11,12 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
+# find_package(Boost REQUIRED COMPONENTS iostreams)
+
+# include_directories(${Boost_INCLUDE_DIRS})
 
 add_executable(server ${SOURCE_FILES})
+
+# target_link_libraries(server PRIVATE ${Boost_LIBRARIES} Threads::Threads ZLIB::ZLIB)
 
 target_link_libraries(server PRIVATE Threads::Threads ZLIB::ZLIB)

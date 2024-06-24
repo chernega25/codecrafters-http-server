@@ -19,7 +19,7 @@ struct http_server {
     int server_fd;
 
     int create_socket();
-    int accept_client();
+    void accept_client();
     http_response process_request(const http_request& request);
 
     inline http_server(std::string _directory = "") : directory(_directory) {}

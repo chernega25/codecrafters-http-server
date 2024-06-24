@@ -1,6 +1,36 @@
 #include "http_server.hpp"
 
 #include <fstream>
+#include <zlib.h>
+#include <sstream>
+#include <iostream>
+
+std::string gzip_compress(const std::string &data) {
+    z_stream zs;
+    memset(&zs, 0, sizeof(zs));
+    if (deflateInit2(&zs, Z_BEST_COMPRESSION, Z_DEFLATED, 15 + 16, 8, Z_DEFAULT_STRATEGY) != Z_OK) {
+        throw std::runtime_error("deflateInit2 failed while compressing.");
+    }
+    zs.next_in = (Bytef *)data.data();
+    zs.avail_in = data.size();
+    int ret;
+    char outbuffer[32768];
+    std::string outstring;
+    do {
+        zs.next_out = reinterpret_cast<Bytef *>(outbuffer);
+        zs.avail_out = sizeof(outbuffer);
+        ret = deflate(&zs, Z_FINISH);
+        if (outstring.size() < zs.total_out) {
+            outstring.append(outbuffer, zs.total_out - outstring.size());
+        }
+    } while (ret == Z_OK);
+    deflateEnd(&zs);
+    if (ret != Z_STREAM_END) {
+        throw std::runtime_error("Exception during zlib compression: (" + std::to_string(ret) + ") " + zs.msg);
+    }
+    return outstring;
+}
+
 
 int http_server::create_socket() {
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -36,7 +66,7 @@ int http_server::create_socket() {
     return 0;
 }
 
-int http_server::accept_client() {
+void http_server::accept_client() {
     struct sockaddr_in client_addr;
     int client_addr_len = sizeof(client_addr);
 
@@ -47,25 +77,41 @@ int http_server::accept_client() {
     if (client_fd < 0)
     {
         perror("Error accepting client connection");
-        close(server_fd);
-        return 1;
+        return;
     }
 
     std::cout << "Client connected\n";
 
     std::string buffer(1024, '\0');
-    ssize_t brecvd = recv(client_fd, (void *)&buffer[0], buffer.max_size(), 0);
+    ssize_t brecvd = 0;
     
-    if (brecvd < 0)
-    {
-        std::cerr << "Error receiving message from client\n";
-        close(client_fd);
-        close(server_fd);
-        return 1;
+    while (brecvd == 0) {
+        brecvd = recv(client_fd, (void *)&buffer[0], buffer.capacity(), MSG_PEEK);
     }
 
+    if (brecvd < 0) {
+        perror("recv");
+        std::cerr << "Error receiving message from client\n";
+        
+        close(client_fd);
+        return;
+    }
+
+    buffer.resize(brecvd);
+    brecvd = recv(client_fd, (void *)&buffer[0], buffer.capacity(), 0);
+
+    if (brecvd < 0) {
+        perror("recv");
+        std::cerr << "Error receiving message from client\n";
+        
+        close(client_fd);
+        return;
+    }
+
+    std::cout << buffer << std::endl;
     http_request request(buffer);
     std::string response = process_request(request).make_response();
+    std::cout << response << std::endl;
 
     ssize_t bsent = send(client_fd, response.c_str(), response.length(), 0);
     
@@ -73,12 +119,10 @@ int http_server::accept_client() {
     {
         std::cerr << "Error sending response to client\n";
         close(client_fd);
-        close(server_fd);
-        return 1;
+        return;
     }
 
     close(client_fd);
-    return 0;
 }
 
 http_response http_server::process_request(const http_request& request) {
@@ -125,6 +169,7 @@ http_response http_server::process_request(const http_request& request) {
         for (const auto& value : enc_it->second) {
             if (value == "gzip") {
                 response.add_header("Content-Encoding", "gzip");
+                response.body = gzip_compress(response.body);
                 break;
             }
         }
