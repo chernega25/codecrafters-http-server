@@ -120,5 +120,10 @@ http_response http_server::process_request(const http_request& request) {
         response.code = 404;
     }
 
+    auto enc_it = request.headers.find("Accept-Encoding");
+    if (enc_it != request.headers.end() && enc_it->second == "gzip" && response.code != 404) {
+        response.headers["Content-Encoding"] = "gzip";
+    }
+
     return response;
 }
