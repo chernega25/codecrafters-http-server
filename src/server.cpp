@@ -43,6 +43,8 @@ struct http_request{
   }
 };
 
+const int MAX_CONNECTIONS = 10;
+
 int main(int argc, char **argv) {
   // Flush after every std::cout / std::cerr
   std::cout << std::unitbuf;
@@ -84,54 +86,60 @@ int main(int argc, char **argv) {
   int client_addr_len = sizeof(client_addr);
   
   std::cout << "Waiting for a client to connect...\n";
+
+  int connections = MAX_CONNECTIONS;
+
+  while(connections--) {
   
-  int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
+    int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
 
-  if (client_fd < 0)
-  {
-    std::cerr << "error handling client connection\n";
-    close(server_fd);
-    return 1;
-  }
+    if (client_fd < 0)
+    {
+      std::cerr << "error handling client connection\n";
+      close(server_fd);
+      return 1;
+    }
 
-  std::cout << "Client connected\n";
+    std::cout << "Client connected\n";
 
-  std::string buffer(1024, '\0');
-  ssize_t brecvd = recv(client_fd, (void *)&buffer[0], buffer.max_size(), 0);
-  
-  if (brecvd < 0)
-  {
-    std::cerr << "Error receiving message from client\n";
+    std::string buffer(1024, '\0');
+    ssize_t brecvd = recv(client_fd, (void *)&buffer[0], buffer.max_size(), 0);
+    
+    if (brecvd < 0)
+    {
+      std::cerr << "Error receiving message from client\n";
+      close(client_fd);
+      close(server_fd);
+      return 1;
+    }
+
+    http_request request(buffer);
+    auto split_path = split_message(request.path, "/");
+    std::string response;
+    if (request.path == "/") {
+      response = "HTTP/1.1 200 OK\r\n\r\n";
+    } else if (split_path[1] == "echo") {
+      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(split_path[2].length()) + "\r\n\r\n" + split_path[2];
+    } else if (split_path[1] == "user-agent") {
+      auto user_agent = request.headers["User-Agent"];
+      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(user_agent.length()) + "\r\n\r\n" + user_agent;
+    } else {
+      response = "HTTP/1.1 404 Not Found\r\n\r\n";
+    }
+
+    ssize_t bsent = send(client_fd, response.c_str(), response.length(), 0);
+    
+    if (bsent < 0)
+    {
+      std::cerr << "Error sending response to client\n";
+      close(client_fd);
+      close(server_fd);
+      return 1;
+    }
+
     close(client_fd);
-    close(server_fd);
-    return 1;
   }
-
-  http_request request(buffer);
-  auto split_path = split_message(request.path, "/");
-  std::string response;
-  if (request.path == "/") {
-    response = "HTTP/1.1 200 OK\r\n\r\n";
-  } else if (split_path[1] == "echo") {
-    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(split_path[2].length()) + "\r\n\r\n" + split_path[2];
-  } else if (split_path[1] == "user-agent") {
-    auto user_agent = request.headers["User-Agent"];
-    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(user_agent.length()) + "\r\n\r\n" + user_agent;
-  } else {
-    response = "HTTP/1.1 404 Not Found\r\n\r\n";
-  }
-
-  ssize_t bsent = send(client_fd, response.c_str(), response.length(), 0);
   
-  if (bsent < 0)
-  {
-    std::cerr << "Error sending response to client\n";
-    close(client_fd);
-    close(server_fd);
-    return 1;
-  }
-
-  close(client_fd);
   close(server_fd);
   return 0;
 }
