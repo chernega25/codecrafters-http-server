@@ -88,12 +88,12 @@ http_response http_server::process_request(const http_request& request) {
         response.code = 200;
     } else if (request.path[1] == "echo") {
         response.code = 200;
-        response.headers["Content-Type"] = "text/plain";
+        response.add_header("Content-Type", "text/plain");
         response.body = request.path[2];
     } else if (request.path[1] == "user-agent") {
         response.code = 200;
-        response.headers["Content-Type"] = "text/plain";
-        response.body = request.headers.at("User-Agent");
+        response.add_header("Content-Type", "text/plain");
+        response.body = request.headers.at("User-Agent")[0];
     } else if (request.path[1] == "files") {
         std::string path = directory + request.path[2];
 
@@ -101,7 +101,7 @@ http_response http_server::process_request(const http_request& request) {
             std::ifstream file(path);
             if (file.is_open()) {
                 response.code = 200;
-                response.headers["Content-Type"] = "application/octet-stream";
+                response.add_header("Content-Type", "application/octet-stream");
                 std::stringstream buffer;
                 buffer << file.rdbuf();
                 response.body = buffer.str();
@@ -121,8 +121,13 @@ http_response http_server::process_request(const http_request& request) {
     }
 
     auto enc_it = request.headers.find("Accept-Encoding");
-    if (enc_it != request.headers.end() && enc_it->second == "gzip" && response.code != 404) {
-        response.headers["Content-Encoding"] = "gzip";
+    if (enc_it != request.headers.end() && response.code != 404) {
+        for (const auto& value : enc_it->second) {
+            if (value == "gzip") {
+                response.add_header("Content-Encoding", "gzip");
+                break;
+            }
+        }
     }
 
     return response;

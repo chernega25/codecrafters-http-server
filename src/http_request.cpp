@@ -20,12 +20,12 @@ http_request::http_request(std::string request) {
     size_t i = 1;
     while (toks[i] != "") {
         std::vector<std::string> split = split_message(toks[i], ": ");
-        headers[split[0]] = split[1];
+        headers[split[0]] = split_message(split[1], ", ");
         ++i;
     }
 
     if (i + 1 < toks.size() && toks[i + 1] != "" && headers.contains("Content-Length")) {
         body = toks[i + 1];
-        body.resize(std::stoi(headers["Content-Length"]));
+        body.resize(std::stoi(headers["Content-Length"][0]));
     }
 }

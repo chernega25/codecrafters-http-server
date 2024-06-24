@@ -9,7 +9,7 @@
 struct http_request{
     std::string type;
     std::vector<std::string> path;
-    std::unordered_map<std::string, std::string> headers;
+    std::unordered_map<std::string, std::vector<std::string>> headers;
     std::string body;
 
     http_request(std::string request);
