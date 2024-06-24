@@ -97,16 +97,23 @@ http_response http_server::process_request(const http_request& request) {
     } else if (request.path[1] == "files") {
         std::string path = directory + request.path[2];
 
-        std::ifstream file(path);
-        if (file.is_open()) {
-            response.code = 200;
-            response.headers["Content-Type"] = "application/octet-stream";
-            std::stringstream buffer;
-            buffer << file.rdbuf();
-            response.body = buffer.str();
-            file.close();
+        if (request.type == "GET") {
+            std::ifstream file(path);
+            if (file.is_open()) {
+                response.code = 200;
+                response.headers["Content-Type"] = "application/octet-stream";
+                std::stringstream buffer;
+                buffer << file.rdbuf();
+                response.body = buffer.str();
+                file.close();
+            } else {
+                response.code = 404;
+            }
         } else {
-            response.code = 404;
+            std::ofstream file(path);
+            file << request.body;
+            file.close();
+            response.code = 201;
         }
 
     } else {

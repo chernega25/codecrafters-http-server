@@ -6,6 +6,7 @@ std::string http_response::make_response() {
     std::string status;
     switch (code) {
         case 200: status = "200 OK"; break;
+        case 201: status = "201 Created"; break;
         case 404: status = "404 Not Found"; break;
         default:;
     }
